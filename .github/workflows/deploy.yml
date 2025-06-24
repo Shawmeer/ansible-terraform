@@ -39,6 +39,12 @@ jobs:
       run: |
         echo "ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
 
+    - name: Write SSH key
+      run: |
+        mkdir -p ~/.ssh
+        echo "${{ secrets.EC2_SSH_KEY }}" > ~/.ssh/ec2-test.pem
+        chmod 600 ~/.ssh/ec2-test.pem
+
     - name: Create Ansible Inventory
       run: |
         mkdir -p ../ansible
