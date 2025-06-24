@@ -1,4 +1,4 @@
-name: "CI/CD: Terraform + Ansible"
+name: "CI/CD: Terraform plus Ansible"
 
 on:
   push:
@@ -51,5 +51,7 @@ jobs:
         sudo apt install -y ansible
 
     - name: Run Ansible Playbook
+      env:
+        ANSIBLE_HOST_KEY_CHECKING: "False"
       run: |
         ansible-playbook -i ../ansible/inventory.ini ../ansible/playbook.yml
