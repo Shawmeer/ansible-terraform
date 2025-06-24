@@ -82,4 +82,3 @@
       service:
         name: nginx
         state: restarted
-    - name: Reload systemd
