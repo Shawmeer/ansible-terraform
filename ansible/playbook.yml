@@ -1,16 +1,21 @@
 - hosts: web
   become: true
+  vars:
+    domain_name: "{{ domain_name | default('example.com') }}"
+
   tasks:
 
     - name: Update apt cache
       apt:
         update_cache: yes
 
-    - name: Install NGINX and Node.js
+    - name: Install NGINX, Node.js, and Certbot
       apt:
         name:
           - nginx
           - nodejs
+          - certbot
+          - python3-certbot-nginx
         state: present
 
     - name: Start and enable NGINX
@@ -59,8 +64,22 @@
         dest: /etc/nginx/sites-available/default
       notify: Restart NGINX
 
+    - name: Obtain Let's Encrypt certificate for {{ domain_name }}
+      command: >
+        certbot --nginx -n --agree-tos --redirect
+        -m your@email.com
+        -d {{ domain_name }}
+        -d www.{{ domain_name }}
+      when: domain_name is defined
+
+    - name: Test certbot auto-renew
+      command: certbot renew --dry-run
+      changed_when: false
+      ignore_errors: true
+
   handlers:
     - name: Restart NGINX
       service:
         name: nginx
         state: restarted
+    - name: Reload systemd
