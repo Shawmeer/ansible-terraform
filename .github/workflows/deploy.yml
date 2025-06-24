@@ -32,7 +32,7 @@ jobs:
       run: terraform init
 
     - name: Terraform Apply
-      run: terraform apply -auto-approve
+      run: terraform apply -auto-approve -var="key_name=ec2-test"
 
     - name: Extract Public IP
       id: get_ip
