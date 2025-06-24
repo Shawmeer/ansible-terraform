@@ -1,0 +1,55 @@
+name: "CI/CD: Terraform + Ansible"
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: terraform
+
+    steps:
+    - name: Checkout Repo
+      uses: actions/checkout@v3
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.5.7
+
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v2
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ap-south-1
+
+    - name: Terraform Init
+      run: terraform init
+
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+
+    - name: Extract Public IP
+      id: get_ip
+      run: |
+        echo "ip=$(terraform output -raw instance_public_ip)" >> $GITHUB_OUTPUT
+
+    - name: Create Ansible Inventory
+      run: |
+        mkdir -p ../ansible
+        echo "[web]" > ../ansible/inventory.ini
+        echo "${{ steps.get_ip.outputs.ip }} ansible_user=ubuntu ansible_ssh_private_key_file=~/.ssh/ec2-test.pem" >> ../ansible/inventory.ini
+
+    - name: Install Ansible
+      run: |
+        sudo apt update
+        sudo apt install -y ansible
+
+    - name: Run Ansible Playbook
+      run: |
+        ansible-playbook -i ../ansible/inventory.ini ../ansible/playbook.yml

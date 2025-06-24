@@ -1,0 +1,39 @@
+# Terraform
+*.tfstate
+*.tfstate.backup
+.terraform/
+crash.log
+override.tf
+override.tf.json
+terraform.tfvars
+terraform.tfvars.json
+
+# Ansible
+*.retry
+*.log
+inventory.ini
+hosts.txt
+*.pem
+*.b64
+
+# SSH keys (DO NOT commit your private keys)
+**/*.pem
+**/*.key
+**/id_rsa
+**/id_rsa.pub
+
+# OS-specific
+.DS_Store
+Thumbs.db
+
+# Python virtualenv (if used with Ansible)
+.venv/
+__pycache__/
+*.pyc
+
+# VSCode / JetBrains / IDEs
+.vscode/
+.idea/
+
+# GitHub Actions artifacts (if locally cached)
+.github/workflows/*.log

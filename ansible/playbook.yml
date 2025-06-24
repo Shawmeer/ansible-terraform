@@ -1,0 +1,66 @@
+- hosts: web
+  become: true
+  tasks:
+
+    - name: Update apt cache
+      apt:
+        update_cache: yes
+
+    - name: Install NGINX and Node.js
+      apt:
+        name:
+          - nginx
+          - nodejs
+        state: present
+
+    - name: Start and enable NGINX
+      service:
+        name: nginx
+        state: started
+        enabled: true
+
+    - name: Copy frontend HTML
+      copy:
+        src: index.html
+        dest: /var/www/html/index.html
+        mode: '0644'
+
+    - name: Copy backend app
+      copy:
+        src: backend-app.js
+        dest: /home/ubuntu/backend-app.js
+        mode: '0755'
+
+    - name: Create systemd service for backend app
+      copy:
+        dest: /etc/systemd/system/backend.service
+        content: |
+          [Unit]
+          Description=Node.js Backend
+
+          [Service]
+          ExecStart=/usr/bin/node /home/ubuntu/backend-app.js
+          Restart=always
+          User=ubuntu
+          Environment=NODE_ENV=production
+
+          [Install]
+          WantedBy=multi-user.target
+
+    - name: Enable and start backend service
+      systemd:
+        name: backend
+        enabled: yes
+        state: started
+
+    - name: Configure NGINX with reverse proxy
+      template:
+        src: nginx.conf.j2
+        dest: /etc/nginx/sites-available/default
+      notify: Restart NGINX
+
+  handlers:
+    - name: Restart NGINX
+      service:
+        name: nginx
+        state: restarted
